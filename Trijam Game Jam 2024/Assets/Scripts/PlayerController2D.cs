@@ -4,65 +4,88 @@ using UnityEngine;
 
 public class PlayerController2D : MonoBehaviour
 {
+    private float horizontal;
+    private float speed = 8f;
+    private float jumpingPower = 16f;
+    private bool isFacingRight = true;
+
+    private bool canDash = true;
+    private bool isDashing;
+    private float dashingPower = 24f;
+    private float dashingTime = 0.2f;
+    private float dashingCooldown = 1f;
+
     [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float jumpForce = 10f;
-    private Vector2 moveInput;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private LayerMask groundLayer;
+   // [SerializeField] private TrailRenderer tr;
 
-    // Ground Checks
-    [Header("Ground Parameters")]
-    private bool IsGrounded;
-    public Transform groundCheckPoint;
-    public LayerMask whatIsGround;
-    public float groundRadiues = 0.2f;
-
-    // Flip
-    private bool facingRight = false;
-
-    // Start is called before the first frame update
-    void Start()
+    private void Update()
     {
-        rb = GetComponent<Rigidbody2D>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.UpArrow) && IsGrounded)
+        if (isDashing)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            return;
         }
+
+        horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetButtonDown("Jump") && IsGrounded())
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
+        }
+
+        if (Input.GetButtonUp("Jump") && rb.velocity.y > 0f)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        {
+            StartCoroutine(Dash());
+        }
+
+        Flip();
     }
 
     private void FixedUpdate()
     {
-        IsGrounded = Physics2D.OverlapCircle(groundCheckPoint.position, groundRadiues, whatIsGround);
+        if (isDashing)
+        {
+            return;
+        }
 
-        PlayerMovement();
+        rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
     }
 
-    private void PlayerMovement()
+    private bool IsGrounded()
     {
-        moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), 0);
-        rb.velocity = new Vector2(moveInput.x * moveSpeed, rb.velocity.y);
-
-        // flip character based on direction
-        if (facingRight == false && moveInput.x < 0) { Flip(); }
-        if (facingRight == true && moveInput.x > 0) { Flip(); }
+        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
     }
 
     private void Flip()
     {
-        facingRight = !facingRight;
-        Vector3 Scaler = transform.localScale;
-        Scaler.x *= -1;
-        transform.localScale = Scaler;
+        if (isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
+        {
+            Vector3 localScale = transform.localScale;
+            isFacingRight = !isFacingRight;
+            localScale.x *= -1f;
+            transform.localScale = localScale;
+        }
     }
 
-    private void OnDrawGizmos()
+    private IEnumerator Dash()
     {
-        if (groundCheckPoint != null) return;
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(groundCheckPoint.position, groundRadiues);
+        canDash = false;
+        isDashing = true;
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+        rb.velocity = new Vector2(transform.localScale.x * dashingPower, 0f);
+        //tr.emitting = true;
+        yield return new WaitForSeconds(dashingTime);
+       // tr.emitting = false;
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+        yield return new WaitForSeconds(dashingCooldown);
+        canDash = true;
     }
 }

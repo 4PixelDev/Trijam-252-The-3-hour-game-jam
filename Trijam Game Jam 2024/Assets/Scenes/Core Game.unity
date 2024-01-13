@@ -138,7 +138,7 @@ GameObject:
   - component: {fileID: 397532667}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -156,13 +156,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 397532668}
-  moveSpeed: 10
-  jumpForce: 10
-  groundCheckPoint: {fileID: 759495443}
-  whatIsGround:
+  groundCheck: {fileID: 759495443}
+  groundLayer:
     serializedVersion: 2
     m_Bits: 8
-  groundRadiues: 0.2
 --- !u!50 &397532668
 Rigidbody2D:
   serializedVersion: 4
@@ -314,8 +311,8 @@ GameObject:
   m_Component:
   - component: {fileID: 491014422}
   - component: {fileID: 491014421}
-  - component: {fileID: 491014424}
   - component: {fileID: 491014423}
+  - component: {fileID: 491014424}
   m_Layer: 0
   m_Name: Finish Point
   m_TagString: Finish
